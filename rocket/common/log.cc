@@ -12,7 +12,7 @@ namespace rocket {
 static Logger* g_logger = nullptr;
 
 // 获取日志记录器
-Logger* Logger::GetGlobolLogger(){
+Logger* Logger::GetGlobalLogger(){
   // 返回已存在的实例
   if(g_logger){
     return g_logger;  

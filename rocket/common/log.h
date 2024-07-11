@@ -13,9 +13,10 @@ namespace rocket {
 
 // DEBUG日志的宏定义
 #define DEBUGLOG(str, ...)\
-  string msg = new rocket::LogEvent(rocket::LogLevel::Debug)->toSring() + rocket::formatString(str, ##__VA_ARGS__);\
-  rocket::Logger::GetGlobolLogger()->pushLog(msg);\
-  rocket::Logger::GetGlobolLogger()->log();\
+  rocket::LogEvent logEvent(rocket::LogLevel::Debug);\
+  std::string msg = logEvent.toString() + rocket::formatString(str, ##__VA_ARGS__);\
+  rocket::Logger::GetGlobalLogger()->pushLog(msg);\
+  rocket::Logger::GetGlobalLogger()->log();\
 
 // 字符串格式化
 template<typename... Args>
@@ -47,7 +48,7 @@ class Logger {
     void pushLog(const std::string& msg);
 
     // 获取全局唯一的日志记录器实例
-    static Logger* GetGlobolLogger();
+    static Logger* GetGlobalLogger();
 
     // 处理并输出日志消息
     void log();
