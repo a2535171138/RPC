@@ -5,7 +5,6 @@
 #include "rocket/common/log.h"
 #include "rocket/common/util.h"
 
-
 namespace rocket {
 
 // 全局唯一的日志记录器实例
@@ -13,29 +12,41 @@ static Logger* g_logger = nullptr;
 
 // 获取日志记录器
 Logger* Logger::GetGlobalLogger(){
-  // 返回已存在的实例
-  if(g_logger){
-    return g_logger;  
-  }
-
-  // 创建新的实例返回
-  g_logger = new Logger();
   return g_logger;
 }
+
+// 初始化全局日志记录器
+Logger* Logger::InitGlobalLogger(){
+  LogLevel global_log_level = StringToLogLevel(Config::GetGlobalConfig()->m_log_level); // 从全局配置获取日志级别
+  printf("Init log level [%s]\n", LogLevelToString(global_log_level).c_str());  // 打印初始化日志级别信息
+
+  // 创建新的实例返回
+  g_logger = new Logger(global_log_level);
+}
+
 
 // 将日志级别枚举值转换为字符串
 string LogLevelToString(LogLevel level){
   switch(level){
     case Debug:
-      return "Debug";
+      return "DEBUG";
     case Info:
-      return "Info";
+      return "INFO";
     case Error:
-      return "Error";
+      return "ERROR";
     default:
-      return "Unknown";
+      return "UNKNOWN";
   }
 }
+
+// 将字符串转换为日志级别枚举
+LogLevel StringToLogLevel(const string& LogLevel){
+  if(LogLevel == "DEBUG") return Debug;
+  else if(LogLevel == "INFO") return Info;
+  else if(LogLevel == "ERROR") return Error;
+  else return Debug;
+}
+
 
 // 生成包含详细信息的日志消息字符串
 string LogEvent::toString(){
@@ -56,24 +67,29 @@ string LogEvent::toString(){
   m_pid = getPid(); // 获取进程ID
   m_thread_id = getThreadId();  // 获取线程ID
 
-  stringstream ss;
+  stringstream ss;  // 字符串流
 
-  ss << "[" << LogLevelToString(m_level) << "]\t"
-    << "[" << time_str << "]\t"
-    << "[" << m_pid << ":" << m_thread_id << "]\t"
-    << "[" << string(__FILE__) << ":" << __LINE__ << "]\t";
+  ss << "[" << LogLevelToString(m_level) << "]\t" // 日志级别
+    << "[" << time_str << "]\t" // 时间
+    << "[" << m_pid << ":" << m_thread_id << "]\t"; // 进程ID和线程ID
 
-  return ss.str();
-
+  return ss.str();  // 返回生成的日志消息字符串
 }
 
 // 将日志消息推送到缓冲区
 void Logger::pushLog(const std::string& msg ){
-  m_buffer.push(msg);
+  ScopeMutex<Mutex> lock(m_mutex);  // 加锁
+  m_buffer.push(msg); // 将消息推入缓冲区
+  lock.unlock();  // 解锁
 }
 
 // 处理并输出日志消息
 void Logger::log(){
+  ScopeMutex<Mutex> lock(m_mutex);  // 加锁
+  queue<string> tmp = m_buffer; // 复制缓冲区消息
+  m_buffer.swap(tmp); // 交换缓冲区
+  lock.unlock();  // 解锁
+
   while(!m_buffer.empty()){
     string msg = m_buffer.front();  // 获取缓冲区中的第一条消息
     m_buffer.pop(); // 弹出已处理的消息
