@@ -12,11 +12,12 @@ using namespace std;
 namespace rocket {
 
 // DEBUG日志的宏定义
-#define DEBUGLOG(str, ...)\
-  rocket::LogEvent logEvent(rocket::LogLevel::Debug);\
-  std::string msg = logEvent.toString() + rocket::formatString(str, ##__VA_ARGS__);\
-  rocket::Logger::GetGlobalLogger()->pushLog(msg);\
-  rocket::Logger::GetGlobalLogger()->log();\
+#define DEBUGLOG(str, ...)                                                          \
+  rocket::LogEvent logEvent(rocket::LogLevel::Debug);                               \
+  std::string msg = logEvent.toString() + rocket::formatString(str, ##__VA_ARGS__); \
+  msg += "\n";                                                                      \
+  rocket::Logger::GetGlobalLogger()->pushLog(msg);                                  \
+  rocket::Logger::GetGlobalLogger()->log();                                         \
 
 // 字符串格式化
 template<typename... Args>
