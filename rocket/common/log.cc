@@ -19,7 +19,6 @@ Logger* Logger::GetGlobalLogger(){
 Logger* Logger::InitGlobalLogger(){
   LogLevel global_log_level = StringToLogLevel(Config::GetGlobalConfig()->m_log_level); // 从全局配置获取日志级别
   printf("Init log level [%s]\n", LogLevelToString(global_log_level).c_str());  // 打印初始化日志级别信息
-
   // 创建新的实例返回
   g_logger = new Logger(global_log_level);
 }
@@ -86,13 +85,13 @@ void Logger::pushLog(const std::string& msg ){
 // 处理并输出日志消息
 void Logger::log(){
   ScopeMutex<Mutex> lock(m_mutex);  // 加锁
-  queue<string> tmp = m_buffer; // 复制缓冲区消息
+  queue<string> tmp; // 复制缓冲区消息
   m_buffer.swap(tmp); // 交换缓冲区
   lock.unlock();  // 解锁
 
-  while(!m_buffer.empty()){
-    string msg = m_buffer.front();  // 获取缓冲区中的第一条消息
-    m_buffer.pop(); // 弹出已处理的消息
+  while(!tmp.empty()){
+    string msg = tmp.front();  // 获取缓冲区中的第一条消息
+    tmp.pop(); // 弹出已处理的消息
     printf(msg.c_str());  // 输出消息
   }
 }
