@@ -12,6 +12,8 @@ pid_t getPid();
 // 获取当前线程ID
 pid_t getThreadId();
 
+
+int64_t getNowMs();
 }
 
 #endif

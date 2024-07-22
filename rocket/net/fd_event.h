@@ -20,6 +20,8 @@ namespace rocket {
       // 构造函数，接受一个文件描述符
       FdEvent(int fd);
 
+      FdEvent();
+
       // 析构函数
       ~FdEvent();
 

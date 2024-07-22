@@ -9,6 +9,7 @@
 #include "rocket/common/mutex.h"
 #include "rocket/net/fd_event.h"
 #include "rocket/net/wakeup_fd_event.h"
+#include "rocket/net/timer.h"
 
 using namespace std;
 
@@ -44,6 +45,8 @@ class EventLoop {
     // 添加任务到事件循环
     void addTask(function<void()> cb, bool is_wake_up = false);
 
+    void addTimerEvent(TimerEvent::s_ptr evnet);
+
   private:
     // 事件循环所属线程 ID
     pid_t m_thread_id {0};
@@ -69,11 +72,16 @@ class EventLoop {
     // 互斥锁，用于保护任务队列
     Mutex m_mutex;
 
+    Timer* m_timer {NULL};
+
     // 处理唤醒事件
     void dealWakeup();
 
     // 初始化唤醒事件
     void initWakeUpFdEvent();
+
+    void initTimer();
+
 };
 
 }

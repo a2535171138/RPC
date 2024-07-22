@@ -10,6 +10,11 @@ FdEvent::FdEvent(int fd) : m_fd(fd) {
   memset(&m_listen_events, 0, sizeof(m_listen_events));
 }
 
+FdEvent::FdEvent(){
+  // 将监听事件结构体清零
+  memset(&m_listen_events, 0, sizeof(m_listen_events));
+}
+
 // FdEvent类的析构函数，目前未做任何操作
 FdEvent::~FdEvent(){
 

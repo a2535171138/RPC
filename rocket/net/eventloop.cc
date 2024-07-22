@@ -14,6 +14,7 @@
       op = EPOLL_CTL_MOD; \
     } \
     epoll_event tmp = event -> getEpollEvent(); \
+    INFOLOG("epoll_event.events = %d", (int)tmp.events); \
     int rt = epoll_ctl(m_epoll_fd, op, event->getFd(), &tmp); \
     if(rt == -1){ \
       ERRORLOG("failed epoll_ctl when add fd %d, errno=%d, error=%s", errno, strerror(errno)); \
@@ -64,6 +65,9 @@ EventLoop::EventLoop(){
 
   // 初始化唤醒事件
   initWakeUpFdEvent();
+
+  initTimer();
+
   INFOLOG("succ create event loop in thread %d", m_thread_id);
   // 将当前 EventLoop 实例设置为线程局部存储
   t_current_eventloop = this;
@@ -78,6 +82,20 @@ EventLoop::~EventLoop(){
     delete m_wakeup_fd_event;
     m_wakeup_fd_event = NULL;
   }
+
+  if(m_timer){
+    delete m_timer;
+    m_timer = NULL;
+  }
+}
+
+void EventLoop::initTimer(){
+  m_timer = new Timer();
+  addEpollEvent(m_timer);
+}
+
+void EventLoop::addTimerEvent(TimerEvent::s_ptr event){
+  m_timer->addTimerEvent(event);
 }
 
 // 初始化唤醒事件
@@ -89,6 +107,7 @@ void EventLoop::initWakeUpFdEvent(){
     ERRORLOG("failed to create event loop, eventfd create error, error info[%d]",  errno);
     exit(0);
   }
+  INFOLOG("wakeup fd = %d", m_wakeup_fd);
 
   // 创建 WakeUpFdEvent 对象并设置其回调函数
   m_wakeup_fd_event = new WakeUpFdEvent(m_wakeup_fd);
@@ -126,7 +145,7 @@ void EventLoop::loop(){
     // 设置 epoll 等待的超时时间
     int timeout = g_epoll_max_timeout; 
     epoll_event result_events[g_epoll_max_events]; // 用于存储 epoll 事件的数组
-    DEBUGLOG("now begin to epoll_wait");
+    // DEBUGLOG("now begin to epoll_wait");
     // 调用 epoll_wait 等待事件发生
     int rt = epoll_wait(m_epoll_fd, result_events, g_epoll_max_events, timeout);
     DEBUGLOG("now end epoll_wait, rt = %d", rt);

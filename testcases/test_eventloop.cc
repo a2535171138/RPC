@@ -5,10 +5,12 @@
 #include <string.h>                // 引入字符串操作函数
 #include <unistd.h>                // 引入 Unix 标准函数，如 close
 #include <cstdio>                  // 引入 C 标准输入输出库
+#include <memory>                  
 #include "rocket/common/log.h"     // 引入自定义日志库
 #include "rocket/common/config.h"  // 引入自定义配置库
 #include "rocket/net/fd_event.h"   // 引入 FdEvent 类的头文件
 #include "rocket/net/eventloop.h"  // 引入 EventLoop 类的头文件
+#include "rocket/net/timer_event.h" 
 
 int main(){
   // 禁用 stdout 的缓冲区，这样 printf 直接输出到终端
@@ -35,7 +37,7 @@ int main(){
   sockaddr_in addr;
   memset(&addr, 0, sizeof(addr)); // 清零结构体
 
-  addr.sin_port = htons(12363); // 设置监听端口（12363）
+  addr.sin_port = htons(12368); // 设置监听端口
   addr.sin_family = AF_INET;    // 设置地址族为 IPv4
 
   // 将 IP 地址转换为网络字节序，并赋值给 addr.sin_addr
@@ -75,6 +77,15 @@ int main(){
 
   // 将 FdEvent 实例添加到事件循环中
   eventloop->addEpollEvent(&event);
+
+  int i = 0;
+  rocket::TimerEvent::s_ptr timer_event = make_shared<rocket::TimerEvent>(
+    1000, true, [&i](){
+      INFOLOG("trigger timer event, count=%d", i++);
+    }
+  );
+
+  eventloop->addTimerEvent(timer_event);
 
   // 启动事件循环
   eventloop->loop();
