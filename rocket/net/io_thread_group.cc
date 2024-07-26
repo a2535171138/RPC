@@ -9,7 +9,7 @@ IOThreadGroup::IOThreadGroup(int size) : m_size(size) {
   m_io_thread_groups.resize(size);
   
   // 创建指定数量的 I/O 线程对象
-  for(size_t i = 0; i < size; ++i) {
+  for(size_t i = 0; (int)i < size; ++i) {
     m_io_thread_groups[i] = new IOThread();
   }
 }
@@ -41,7 +41,7 @@ void IOThreadGroup::join() {
 // 获取一个 I/O 线程，按轮询方式返回
 IOThread* IOThreadGroup::getIOThread() {
   // 如果索引超出范围或等于 -1，重置索引为 0
-  if(m_index == m_io_thread_groups.size() || m_index == -1) {
+  if(m_index == (int)m_io_thread_groups.size() || m_index == -1) {
     m_index = 0;
   }
 

@@ -47,6 +47,8 @@ class EventLoop {
 
     void addTimerEvent(TimerEvent::s_ptr evnet);
 
+    static EventLoop* GetCurrentEventLoop();
+
   private:
     // 事件循环所属线程 ID
     pid_t m_thread_id {0};
