@@ -37,7 +37,7 @@ class EventLoop {
     void addEpollEvent(FdEvent* event);
 
     // 从 epoll 删除事件
-    void deteteEpollEvent(FdEvent* event);
+    void deleteEpollEvent(FdEvent* event);
 
     // 检查是否在事件循环的线程中
     bool isInLoopThread();

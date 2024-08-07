@@ -14,7 +14,7 @@ class TcpAcceptor {  // 定义TcpAcceptor类
 
     ~TcpAcceptor();  // 析构函数，释放资源
 
-    int accept();  // 接受连接
+    pair<int, NetAddr::s_ptr> accept();  // 接受连接
 
     int getListnFd();  // 获取监听文件描述符
 

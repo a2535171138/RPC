@@ -19,6 +19,7 @@
     if(rt == -1){ \
       ERRORLOG("failed epoll_ctl when add fd %d, errno=%d, error=%s", errno, strerror(errno)); \
     } \
+    m_listen_fds.insert(event->getFd()); \
     DEBUGLOG("add event success, fd[%d]", event->getFd()) \
 
 // 定义将事件删除出 epoll 的宏
@@ -33,6 +34,7 @@
     if(rt == -1){ \
       ERRORLOG("failed epoll_ctl when add fd %d, errno=%d, error=%s", errno, strerror(errno)); \
     } \
+    m_listen_fds.erase(event->getFd()); \
     DEBUGLOG("delete event success, fd[%d]", event->getFd()) \
 
 
@@ -205,7 +207,7 @@ void EventLoop::addEpollEvent(FdEvent* event){
 }
 
 // 删除 epoll 事件
-void EventLoop::deteteEpollEvent(FdEvent* event){
+void EventLoop::deleteEpollEvent(FdEvent* event){
   // 如果当前在事件循环线程中，直接删除事件
   if(isInLoopThread()){
     DELETE_TO_EPOLL();

@@ -1,8 +1,10 @@
 #ifndef ROCKET_NET_TCP_SERVER_H
 #define ROCKET_NET_TCP_SERVER_H
 
+#include <set>
 #include "rocket/net/tcp/tcp_acceptor.h"  // 引入TcpAcceptor头文件
 #include "rocket/net/tcp/net_addr.h"  // 引入NetAddr头文件
+#include "rocket/net/tcp/tcp_connection.h" 
 #include "rocket/net/eventloop.h"  // 引入EventLoop头文件
 #include "rocket/net/io_thread_group.h"  // 引入IOThreadGroup头文件
 
@@ -32,6 +34,8 @@ class TcpServer {  // 定义TcpServer类
     void init();  // 初始化函数
 
     void onAccept();  // 处理接受连接的函数
+
+    set<TcpConnection::s_ptr> m_client;
 };
 
 }

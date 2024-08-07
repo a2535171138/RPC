@@ -36,6 +36,7 @@ void TcpBuffer::writeToBuffer(const char* buf, int size) {  // 将数据写入�
   }
 
   memcpy(&m_buffer[m_write_index], buf, size);  // 将数据复制到缓冲区中
+  m_write_index += size;
 }
 
 void TcpBuffer::readFromBuffer(vector<char>& re, int size) {  // 从缓冲区读取数据

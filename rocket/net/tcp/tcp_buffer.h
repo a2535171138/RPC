@@ -9,6 +9,8 @@ namespace rocket {  // 定义命名空间rocket
 
 class TcpBuffer {  // 定义TcpBuffer类
   public:
+    typedef std::shared_ptr<TcpBuffer> s_ptr;
+
     TcpBuffer(int size);  // 构造函数，初始化缓冲区大小
 
     ~TcpBuffer();  // 析构函数，释放资源
@@ -33,12 +35,12 @@ class TcpBuffer {  // 定义TcpBuffer类
 
     void moveWriteIndex(int size);  // 移动写索引
 
+    vector<char> m_buffer;  // 缓冲区，使用vector<char>实现
+
   private:
     int m_read_index {0};  // 读索引，初始值为0
     int m_write_index {0};  // 写索引，初始值为0
     int m_size {0};  // 缓冲区大小，初始值为0
-
-    vector<char> m_buffer;  // 缓冲区，使用vector<char>实现
 
 };
 

@@ -35,10 +35,7 @@ namespace rocket {
   { \
     rocket::Logger::GetGlobalLogger()->pushLog(rocket::LogEvent(rocket::LogLevel::Error).toString() \
       + "[" + std::string(__FILE__) + ":" + std::to_string(__LINE__) + "]\t" + rocket::formatString(str, ##__VA_ARGS__) + "\n");\
-    rocket::Logger::GetGlobalLogger()->log(); \
   } \
-
-
 
 // 字符串格式化函数模板
 template<typename... Args>

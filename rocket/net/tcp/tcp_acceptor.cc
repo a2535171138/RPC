@@ -48,7 +48,7 @@ int TcpAcceptor::getListnFd() {  // 获取监听文件描述符
   return m_listenfd;
 }
 
-int TcpAcceptor::accept() {  // 接受连接
+pair<int, NetAddr::s_ptr> TcpAcceptor::accept() {  // 接受连接
   if (m_family == AF_INET) {  // 如果地址族是IPv4
     sockaddr_in client_addr;  // 定义客户端地址
     memset(&client_addr, 0, sizeof(client_addr));  // 将客户端地址结构体清零
@@ -59,11 +59,12 @@ int TcpAcceptor::accept() {  // 接受连接
       ERRORLOG("accept error, errno=%d, error=%s", errno, strerror(errno));  // 记录错误日志
     }
 
-    IPNetAddr peer_addr(client_addr);  // 将客户端地址转换为IPNetAddr对象
-    INFOLOG("A client have accepted succ, peer addr [%s]", peer_addr.toString().c_str());  // 记录连接成功日志
-    return client_fd;  // 返回客户端文件描述符
+    IPNetAddr::s_ptr peer_addr = make_shared<IPNetAddr>(client_addr);  // 将客户端地址转换为IPNetAddr对象
+    INFOLOG("A client have accepted succ, peer addr [%s]", peer_addr->toString().c_str());  // 记录连接成功日志
+
+    return make_pair(client_fd, peer_addr) ;  // 返回客户端文件描述符
   } else {  // 如果地址族不是IPv4
-    return -1;  // 返回错误码
+    return std::make_pair(-1, nullptr);  // 返回错误码
   }
 }
 

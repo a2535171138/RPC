@@ -1,6 +1,7 @@
 #include "rocket/net/tcp/tcp_server.h"  // 引入TcpServer头文件
 #include "rocket/net/eventloop.h"  // 引入EventLoop头文件
 #include "rocket/common/log.h"  // 引入日志头文件
+#include "rocket/net/tcp/tcp_connection.h"
 
 namespace rocket {  // 定义命名空间rocket
 
@@ -30,9 +31,17 @@ void TcpServer::init() {  // 初始化函数
 }
 
 void TcpServer::onAccept() {  // 处理接受连接的函数
-  int client_fd = m_acceptor->accept();  // 接受连接，获取客户端文件描述符
+  auto re = m_acceptor->accept();
+  int client_fd = re.first;
+  NetAddr::s_ptr peer_addr = re.second;
 
   m_client_counts++;  // 增加客户端连接计数
+
+  IOThread* io_thread = m_io_thread_group->getIOThread();
+  TcpConnection::s_ptr connection = make_shared<TcpConnection>(io_thread, client_fd, 128, peer_addr);
+
+  connection->setState(Connected);
+  m_client.insert(connection);
 
   INFOLOG("TcpServer succ get client, fd=%d", client_fd);  // 记录成功接受客户端连接的日志
 }
