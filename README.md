@@ -1,0 +1,2 @@
+test_tcp和test_client端口号一致  
+两个终端，先运行test_tcp，再运行test_client
