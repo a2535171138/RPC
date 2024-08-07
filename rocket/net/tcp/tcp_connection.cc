@@ -75,6 +75,7 @@ namespace rocket {
       INFOLOG("peer closed, peer addr [%s], clientfd [%d]", 
               m_peer_addr->toString().c_str(), m_fd);
       clear();
+      return;
     }
 
     // 如果未读取完所有数据，记录错误日志
@@ -167,6 +168,9 @@ namespace rocket {
     if (m_state == Closed) {
       return;  // 如果已关闭，无需进一步处理
     }
+
+    m_fd_event->cancel(FdEvent::IN_EVENT);
+    m_fd_event->cancel(FdEvent::OUT_EVENT);
 
     // 从事件循环中删除FdEvent对象
     m_io_thread->getEventLoop()->deleteEpollEvent(m_fd_event);
