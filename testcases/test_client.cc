@@ -9,6 +9,10 @@
 #include <unistd.h>
 #include "rocket/common/log.h"
 #include "rocket/common/config.h"
+#include "rocket/net/tcp/tcp_client.h"
+#include "rocket/net/tcp/net_addr.h"
+#include "rocket/net/string_coder.h"
+#include "rocket/net/abstract_protocol.h"
 
 // 测试连接函数
 void test_connect() {
@@ -56,6 +60,36 @@ void test_connect() {
   close(fd);
 }
 
+// 测试 TcpClient 类
+void test_tcp_client() {
+  rocket::IPNetAddr::s_ptr addr = make_shared<rocket::IPNetAddr>("127.0.0.1", 12350);
+  rocket::TcpClient client(addr);
+  
+  // 连接到服务器
+  client.connect([addr, &client]() {
+    DEBUGLOG("connect to [%s] success", addr->toString().c_str());
+    
+    // 创建并发送消息
+    shared_ptr<rocket::StringProtocol> message = make_shared<rocket::StringProtocol>();
+    message->info = "hello rocket";
+    message->setReqId("123456");
+    client.writeMessage(message, [](rocket::AbstractProtocol::s_ptr msg_ptr) {
+      DEBUGLOG("send message success");
+    });
+
+    // 读取消息
+    client.readMessage("123456", [](rocket::AbstractProtocol::s_ptr msg_ptr) {
+      shared_ptr<rocket::StringProtocol> message = dynamic_pointer_cast<rocket::StringProtocol>(msg_ptr);
+      DEBUGLOG("req_id[%s], get response %s", message->getReqId().c_str(), message->info.c_str());
+    });
+
+    // 再次发送消息
+    client.writeMessage(message, [](rocket::AbstractProtocol::s_ptr msg_ptr) {
+      DEBUGLOG("send message 22222 success");
+    });
+  });
+}
+
 int main() {
   // 禁用 stdout 的缓冲区，这样 printf 直接输出到终端
   setvbuf(stdout, NULL, _IONBF, 0);
@@ -67,7 +101,10 @@ int main() {
   rocket::Logger::InitGlobalLogger();
 
   // 调用测试连接函数
-  test_connect();
+  // test_connect();
+
+  // 调用测试 TcpClient 函数
+  test_tcp_client();
 
   return 0;
 }

@@ -61,7 +61,7 @@ EventLoop::EventLoop(){
   m_epoll_fd = epoll_create(10);
   // 检查 epoll 创建是否成功
   if(m_epoll_fd == -1){
-    ERRORLOG("failed to create event loop, epoll_craete error, error info[%d]", errno);
+    ERRORLOG("failed to create event loop, epoll_create error, error info[%d]", errno);
     exit(0);
   }
 
@@ -70,7 +70,7 @@ EventLoop::EventLoop(){
 
   initTimer();
 
-  INFOLOG("succ create event loop in thread %d", m_thread_id);
+  INFOLOG("successfully created event loop in thread %d", m_thread_id);
   // 将当前 EventLoop 实例设置为线程局部存储
   t_current_eventloop = this;
 }
@@ -91,11 +91,13 @@ EventLoop::~EventLoop(){
   }
 }
 
+// 初始化计时器
 void EventLoop::initTimer(){
   m_timer = new Timer();
   addEpollEvent(m_timer);
 }
 
+// 添加定时器事件
 void EventLoop::addTimerEvent(TimerEvent::s_ptr event){
   m_timer->addTimerEvent(event);
 }
@@ -127,6 +129,7 @@ void EventLoop::initWakeUpFdEvent(){
 
 // 事件循环主函数
 void EventLoop::loop(){
+  m_is_looping = true;
   while(!m_stop_flag){
     // 锁定互斥量以访问待处理任务
     ScopeMutex<Mutex> lock(m_mutex);
@@ -147,7 +150,6 @@ void EventLoop::loop(){
     // 设置 epoll 等待的超时时间
     int timeout = g_epoll_max_timeout; 
     epoll_event result_events[g_epoll_max_events]; // 用于存储 epoll 事件的数组
-    // DEBUGLOG("now begin to epoll_wait");
     // 调用 epoll_wait 等待事件发生
     int rt = epoll_wait(m_epoll_fd, result_events, g_epoll_max_events, timeout);
     DEBUGLOG("now end epoll_wait, rt = %d", rt);
@@ -158,7 +160,7 @@ void EventLoop::loop(){
     }
     else {
       // 处理 epoll_wait 返回的事件
-      for(int i=0; i < rt; ++i){
+      for(int i = 0; i < rt; ++i){
         epoll_event trigger_event = result_events[i];
         FdEvent* fd_event = static_cast<FdEvent*>(trigger_event.data.ptr);
         if(fd_event == NULL){
@@ -235,6 +237,7 @@ bool EventLoop::isInLoopThread(){
   return getThreadId() == m_thread_id;
 }
 
+// 获取当前线程的 EventLoop 实例
 EventLoop* EventLoop::GetCurrentEventLoop(){
   if(t_current_eventloop){
     return t_current_eventloop;
@@ -242,6 +245,11 @@ EventLoop* EventLoop::GetCurrentEventLoop(){
 
   t_current_eventloop = new EventLoop();
   return t_current_eventloop;
+}
+
+// 检查事件循环是否正在运行
+bool EventLoop::isLooping(){
+  return m_is_looping;
 }
 
 }
