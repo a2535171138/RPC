@@ -5,7 +5,7 @@
 #include "rocket/net/tcp/net_addr.h"
 #include "rocket/net/tcp/tcp_buffer.h"
 #include "rocket/net/io_thread.h"
-#include "rocket/net/abstract_coder.h"
+#include "rocket/net/coder/abstract_coder.h"
 
 namespace rocket {
 
@@ -38,7 +38,7 @@ class TcpConnection {
     void onRead();
 
     // 执行逻辑操作，处理业务逻辑
-    void execute();
+    void excute();
 
     // 写入数据，将数据写入连接
     void onWrite();

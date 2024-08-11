@@ -1,9 +1,10 @@
-#include <unistd.h>
-#include <functional>
-#include "rocket/common/log.h"
-#include "rocket/net/fd_event_group.h"
-#include "rocket/net/tcp/tcp_connection.h"
-#include "rocket/net/string_coder.h"
+#include <unistd.h>                 // 提供对 POSIX 操作系统 API 的访问
+#include <functional>              // 提供函数对象和其他函数相关功能
+#include "rocket/common/log.h"     // 提供日志记录功能
+#include "rocket/net/fd_event_group.h"  // 提供文件描述符事件组功能
+#include "rocket/net/tcp/tcp_connection.h"  // 提供 TCP 连接类
+#include "rocket/net/coder/string_coder.h"  // 提供字符串编码器
+#include "rocket/net/coder/tinypb_coder.h"  // 提供 TinyPB 编码器
 
 namespace rocket {
 
@@ -14,17 +15,14 @@ TcpConnection::TcpConnection(EventLoop* event_loop, int fd, int buffer_size, Net
     m_in_buffer = make_shared<TcpBuffer>(buffer_size);
     m_out_buffer = make_shared<TcpBuffer>(buffer_size);
 
-    // 获取 FdEvent 对象，进行非阻塞设置
+    // 获取 FdEvent 对象，并设置为非阻塞模式
     m_fd_event = FdEventGroup::getFdEventGroup()->getFdEvent(fd);
     m_fd_event->setNonBlock();
 
-    // 启动对读事件的监听
-    listenRead();
-
     // 初始化编码器
-    m_coder = new StringCoder();
+    m_coder = new TinyPBCoder();
 
-    // 如果是服务器端连接，则再启动一次读事件监听
+    // 如果是服务器端连接，则启动读事件监听
     if (m_connection_type == TcpConnectionByServer) {
         listenRead();
     }
@@ -34,7 +32,7 @@ TcpConnection::TcpConnection(EventLoop* event_loop, int fd, int buffer_size, Net
 TcpConnection::~TcpConnection() {
     DEBUGLOG("~TcpConnection");
     if (m_coder) {
-        delete m_coder;
+        delete m_coder;  // 释放编码器的内存
         m_coder = NULL;
     }
 }
@@ -101,29 +99,31 @@ void TcpConnection::onRead() {
 // 执行处理逻辑，将输入数据存储到输出缓冲区
 void TcpConnection::excute() {
     if (m_connection_type == TcpConnectionByServer) {
-        vector<char> tmp;
-        int size = m_in_buffer->readAble();  // 输入缓冲区中可读的字节数
-        tmp.resize(size);
-        m_in_buffer->readFromBuffer(tmp, size);  // 从输入缓冲区读取数据
+        vector<AbstractProtocol::s_ptr> result;
+        vector<AbstractProtocol::s_ptr> replay_messages;
+        m_coder->decode(result, m_in_buffer);  // 解码输入数据
+        for(size_t i = 0; i < result.size(); ++i){
+            INFOLOG("success get request[%s] from client[%s]", result[i]->m_req_id.c_str(), m_peer_addr->toString().c_str());
 
-        string msg(tmp.begin(), tmp.end());  // 将读取的数据转换为字符串
+            // 创建回应消息
+            shared_ptr<TinyPBProtocol> message = make_shared<TinyPBProtocol>();
+            message->m_pb_data = "hello, this is rocket rpc test data";
+            message->m_req_id = result[i]->m_req_id;
+            replay_messages.emplace_back(message);
+        }
 
-        INFOLOG("success get request from client[%s]", m_peer_addr->toString().c_str());
-
-        // 将消息写入输出缓冲区
-        m_out_buffer->writeToBuffer(msg.c_str(), msg.length());
-
+        m_coder->encode(replay_messages, m_out_buffer);  // 编码回应数据
         // 启动写事件监听
         listenWrite();
     } else {
         vector<AbstractProtocol::s_ptr> result;
-        m_coder->decode(result, m_in_buffer);
+        m_coder->decode(result, m_in_buffer);  // 解码输入数据
 
         for (size_t i = 0; i < result.size(); ++i) {
-            string req_id = result[i]->getReqId();
+            string req_id = result[i]->m_req_id;
             auto it = m_read_dones.find(req_id);
             if (it != m_read_dones.end()) {
-                it->second(result[i]);
+                it->second(result[i]);  // 调用回调函数
             }
         }
     }
@@ -141,11 +141,12 @@ void TcpConnection::onWrite() {
     if (m_connection_type == TcpConnectionByClient) {
         vector<AbstractProtocol::s_ptr> messages;
 
+        // 将待发送的消息放入列表
         for (size_t i = 0; i < m_write_dones.size(); ++i) {
             messages.push_back(m_write_dones[i].first);
         }
 
-        m_coder->encode(messages, m_out_buffer);
+        m_coder->encode(messages, m_out_buffer);  // 编码待发送的数据
     }
 
     bool is_write_all = false;  // 标志是否已写入所有数据

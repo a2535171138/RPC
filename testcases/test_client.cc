@@ -11,8 +11,10 @@
 #include "rocket/common/config.h"
 #include "rocket/net/tcp/tcp_client.h"
 #include "rocket/net/tcp/net_addr.h"
-#include "rocket/net/string_coder.h"
-#include "rocket/net/abstract_protocol.h"
+#include "rocket/net/coder/string_coder.h"
+#include "rocket/net/coder/abstract_protocol.h"
+#include "rocket/net/coder/tinypb_coder.h"
+#include "rocket/net/coder/tinypb_protocol.h"
 
 // 测试连接函数
 void test_connect() {
@@ -29,7 +31,7 @@ void test_connect() {
   sockaddr_in server_addr;
   memset(&server_addr, 0, sizeof(server_addr));  // 清零结构体
   server_addr.sin_family = AF_INET;  // 地址族
-  server_addr.sin_port = htons(12350);  // 端口号，使用网络字节顺序
+  server_addr.sin_port = htons(12351);  // 端口号，使用网络字节顺序
   inet_aton("127.0.0.1", &server_addr.sin_addr);  // 设置 IP 地址为本地地址
 
   // 连接到服务器
@@ -70,23 +72,20 @@ void test_tcp_client() {
     DEBUGLOG("connect to [%s] success", addr->toString().c_str());
     
     // 创建并发送消息
-    shared_ptr<rocket::StringProtocol> message = make_shared<rocket::StringProtocol>();
-    message->info = "hello rocket";
-    message->setReqId("123456");
+    shared_ptr<rocket::TinyPBProtocol> message = make_shared<rocket::TinyPBProtocol>();
+    message->m_req_id = "123456789";
+    message->m_pb_data = "test pb data";
+    
     client.writeMessage(message, [](rocket::AbstractProtocol::s_ptr msg_ptr) {
       DEBUGLOG("send message success");
     });
 
     // 读取消息
-    client.readMessage("123456", [](rocket::AbstractProtocol::s_ptr msg_ptr) {
-      shared_ptr<rocket::StringProtocol> message = dynamic_pointer_cast<rocket::StringProtocol>(msg_ptr);
-      DEBUGLOG("req_id[%s], get response %s", message->getReqId().c_str(), message->info.c_str());
+    client.readMessage("123456789", [](rocket::AbstractProtocol::s_ptr msg_ptr) {
+      shared_ptr<rocket::TinyPBProtocol> message = dynamic_pointer_cast<rocket::TinyPBProtocol>(msg_ptr);
+      DEBUGLOG("req_id[%s], get response %s", message->m_req_id.c_str(), message->m_pb_data.c_str());
     });
 
-    // 再次发送消息
-    client.writeMessage(message, [](rocket::AbstractProtocol::s_ptr msg_ptr) {
-      DEBUGLOG("send message 22222 success");
-    });
   });
 }
 
