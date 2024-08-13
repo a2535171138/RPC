@@ -6,6 +6,7 @@
 #include "rocket/net/tcp/tcp_buffer.h"
 #include "rocket/net/io_thread.h"
 #include "rocket/net/coder/abstract_coder.h"
+#include "rocket/net/rpc/rpc_dispatcher.h"
 
 namespace rocket {
 
@@ -29,7 +30,7 @@ class TcpConnection {
     typedef std::shared_ptr<TcpConnection> s_ptr; // 智能指针类型定义
 
     // 构造函数，初始化 TCP 连接
-    TcpConnection(EventLoop* event_loop, int fd, int buffer_size, NetAddr::s_ptr peer_addr, TcpConnectionType type = TcpConnectionByServer);
+    TcpConnection(EventLoop* event_loop, int fd, int buffer_size, NetAddr::s_ptr peer_addr, NetAddr::s_ptr local_addr, TcpConnectionType type = TcpConnectionByServer);
 
     // 析构函数，清理 TCP 连接资源
     ~TcpConnection();
@@ -68,7 +69,11 @@ class TcpConnection {
     void pushSendMessage(AbstractProtocol::s_ptr message, std::function<void(AbstractProtocol::s_ptr)> done);
 
     // 推送要读取的消息到队列
-    void pushReadMessage(const std::string& req_id, std::function<void(AbstractProtocol::s_ptr)> done);
+    void pushReadMessage(const std::string& msg_id, std::function<void(AbstractProtocol::s_ptr)> done);
+
+    NetAddr::s_ptr getLocalAddr();
+
+    NetAddr::s_ptr getPeerAddr();
 
   private:
     EventLoop* m_event_loop {NULL};             // 事件循环对象指针

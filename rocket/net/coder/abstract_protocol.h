@@ -18,7 +18,7 @@ struct AbstractProtocol : public enable_shared_from_this<AbstractProtocol>{
 
   public:
     // 请求ID，唯一标识一个请求或响应
-    string m_req_id;  
+    string m_msg_id;  
 
 };
 

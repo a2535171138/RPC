@@ -83,23 +83,23 @@ namespace rocket {
         message->m_pk_len = pk_len; // 设置协议长度
 
         // 解析请求 ID 长度及其内容
-        int req_id_len_index = start_index + sizeof(char) + sizeof(message->m_pk_len);
-        if (req_id_len_index >= end_index) {
+        int msg_id_len_index = start_index + sizeof(char) + sizeof(message->m_pk_len);
+        if (msg_id_len_index >= end_index) {
           message->parse_success = false;
-          ERRORLOG("parse error, req_id_len_index[%d] >= end_index[%d]", req_id_len_index, end_index);
+          ERRORLOG("parse error, msg_id_len_index[%d] >= end_index[%d]", msg_id_len_index, end_index);
           continue;
         }
-        message->m_req_id_len = getInt32FromNetByte(&tmp[req_id_len_index]);
-        DEBUGLOG("parse req_id_len=%d", message->m_req_id_len);
+        message->m_msg_id_len = getInt32FromNetByte(&tmp[msg_id_len_index]);
+        DEBUGLOG("parse msg_id_len=%d", message->m_msg_id_len);
 
-        int req_id_index = req_id_len_index + sizeof(message->m_req_id_len);
-        char req_id[100] = {0};
-        memcpy(&req_id[0], &tmp[req_id_index], message->m_req_id_len);
-        message->m_req_id = string(req_id);
-        DEBUGLOG("parse req_id=%s", message->m_req_id.c_str());
+        int msg_id_index = msg_id_len_index + sizeof(message->m_msg_id_len);
+        char msg_id[100] = {0};
+        memcpy(&msg_id[0], &tmp[msg_id_index], message->m_msg_id_len);
+        message->m_msg_id = string(msg_id);
+        DEBUGLOG("parse msg_id=%s", message->m_msg_id.c_str());
 
         // 解析方法名称长度及其内容
-        int method_name_len_index = req_id_index + message->m_req_id_len;
+        int method_name_len_index = msg_id_index + message->m_msg_id_len;
         if (method_name_len_index >= end_index) {
           message->parse_success = false;
           ERRORLOG("parse error, method_name_len_index[%d] >= end_index[%d]", method_name_len_index, end_index);
@@ -138,7 +138,7 @@ namespace rocket {
         DEBUGLOG("parse error_info=%s", message->m_err_info.c_str());
 
         // 计算协议数据的长度并解析数据
-        int pb_data_len = message->m_pk_len - message->m_method_name_len - message->m_req_id_len - message->m_err_info_len - 2 - 24;
+        int pb_data_len = message->m_pk_len - message->m_method_name_len - message->m_msg_id_len - message->m_err_info_len - 2 - 24;
         int pb_data_index = err_info_index + message->m_err_info_len;
         message->m_pb_data = string(&tmp[pb_data_index], pb_data_len);
 
@@ -150,13 +150,13 @@ namespace rocket {
 
   // 编码 TinyPBProtocol 对象为 TinyPB 协议格式的字节流
   const char* TinyPBCoder::encodeTinyPB(shared_ptr<TinyPBProtocol> message, int& len) {
-    if (message->m_req_id.empty()) {
-      message->m_req_id = "123456789"; // 如果请求 ID 为空，设置默认值
+    if (message->m_msg_id.empty()) {
+      message->m_msg_id = "123456789"; // 如果请求 ID 为空，设置默认值
     }
-    DEBUGLOG("req_id = %s", message->m_req_id.c_str());
+    DEBUGLOG("msg_id = %s", message->m_msg_id.c_str());
 
     // 计算协议的总长度
-    int pk_len = 2 + 24 + message->m_req_id.length() + message->m_method_name.length() + message->m_err_info.length() + message->m_pb_data.length();
+    int pk_len = 2 + 24 + message->m_msg_id.length() + message->m_method_name.length() + message->m_err_info.length() + message->m_pb_data.length();
     DEBUGLOG("pk_len = %d", pk_len);
 
     // 分配内存以存储编码后的数据
@@ -173,15 +173,15 @@ namespace rocket {
     tmp += sizeof(pk_len_net);
 
     // 写入请求 ID 长度（网络字节序）
-    int req_id_len = message->m_req_id.length();
-    int32_t req_id_len_net = htonl(req_id_len);
-    memcpy(tmp, &req_id_len_net, sizeof(req_id_len_net));
-    tmp += sizeof(req_id_len_net);
+    int msg_id_len = message->m_msg_id.length();
+    int32_t msg_id_len_net = htonl(msg_id_len);
+    memcpy(tmp, &msg_id_len_net, sizeof(msg_id_len_net));
+    tmp += sizeof(msg_id_len_net);
 
     // 写入请求 ID
-    if (!message->m_req_id.empty()) {
-      memcpy(tmp, &(message->m_req_id[0]), req_id_len);
-      tmp += req_id_len;
+    if (!message->m_msg_id.empty()) {
+      memcpy(tmp, &(message->m_msg_id[0]), msg_id_len);
+      tmp += msg_id_len;
     }
 
     // 写入方法名称长度（网络字节序）
@@ -229,13 +229,13 @@ namespace rocket {
 
     // 更新消息的长度信息
     message->m_pk_len = pk_len;
-    message->m_req_id_len = req_id_len;
+    message->m_msg_id_len = msg_id_len;
     message->m_method_name_len = method_name_len;
     message->m_err_info_len = err_info_len;
     message->parse_success = true;
     len = pk_len;
 
-    DEBUGLOG("encode message[%s] success", message->m_req_id.c_str());
+    DEBUGLOG("encode message[%s] success", message->m_msg_id.c_str());
     return buf;
   }
 }

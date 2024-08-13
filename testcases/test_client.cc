@@ -73,7 +73,7 @@ void test_tcp_client() {
     
     // 创建并发送消息
     shared_ptr<rocket::TinyPBProtocol> message = make_shared<rocket::TinyPBProtocol>();
-    message->m_req_id = "123456789";
+    message->m_msg_id = "123456789";
     message->m_pb_data = "test pb data";
     
     client.writeMessage(message, [](rocket::AbstractProtocol::s_ptr msg_ptr) {
@@ -83,7 +83,7 @@ void test_tcp_client() {
     // 读取消息
     client.readMessage("123456789", [](rocket::AbstractProtocol::s_ptr msg_ptr) {
       shared_ptr<rocket::TinyPBProtocol> message = dynamic_pointer_cast<rocket::TinyPBProtocol>(msg_ptr);
-      DEBUGLOG("req_id[%s], get response %s", message->m_req_id.c_str(), message->m_pb_data.c_str());
+      DEBUGLOG("msg_id[%s], get response %s", message->m_msg_id.c_str(), message->m_pb_data.c_str());
     });
 
   });

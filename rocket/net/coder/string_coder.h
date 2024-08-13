@@ -44,7 +44,7 @@ class StringCoder : public AbstractCoder {
       // 创建一个新的 StringProtocol 消息对象
       shared_ptr<StringProtocol> msg = make_shared<StringProtocol>();
       msg->info = info; // 设置消息中的字符串信息
-      msg->m_req_id = "123456"; // 设置请求ID
+      msg->m_msg_id = "123456"; // 设置请求ID
       out_messages.push_back(msg); // 将消息对象添加到输出消息集合中
     }
 };

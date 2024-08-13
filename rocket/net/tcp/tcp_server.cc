@@ -42,7 +42,7 @@ void TcpServer::onAccept() {
     m_client_counts++;  // 增加客户端连接计数
 
     IOThread* io_thread = m_io_thread_group->getIOThread();  // 从 IO 线程组中获取一个 IO 线程
-    TcpConnection::s_ptr connection = make_shared<TcpConnection>(io_thread->getEventLoop(), client_fd, 128, peer_addr);  // 创建 TcpConnection 对象
+    TcpConnection::s_ptr connection = make_shared<TcpConnection>(io_thread->getEventLoop(), client_fd, 128, peer_addr, m_local_addr);  // 创建 TcpConnection 对象
 
     connection->setState(Connected);  // 设置连接状态为已连接
     m_client.insert(connection);  // 将连接添加到连接集合中

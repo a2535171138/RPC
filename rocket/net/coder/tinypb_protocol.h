@@ -20,7 +20,7 @@ struct TinyPBProtocol : public AbstractProtocol {
 
   public:
     int32_t m_pk_len {0};          // 包长度（包括协议头和数据）
-    int32_t m_req_id_len {0};      // 请求 ID 的长度
+    int32_t m_msg_id_len {0};      // 请求 ID 的长度
 
     int32_t m_method_name_len {0}; // 方法名称的长度
     string m_method_name;          // 方法名称

@@ -9,8 +9,8 @@
 namespace rocket {
 
 // 构造函数，初始化 TCP 连接
-TcpConnection::TcpConnection(EventLoop* event_loop, int fd, int buffer_size, NetAddr::s_ptr peer_addr, TcpConnectionType type)
-: m_event_loop(event_loop), m_peer_addr(peer_addr), m_state(NotConnected), m_fd(fd), m_connection_type(type) {
+TcpConnection::TcpConnection(EventLoop* event_loop, int fd, int buffer_size, NetAddr::s_ptr peer_addr, NetAddr::s_ptr local_addr, TcpConnectionType type)
+: m_event_loop(event_loop), m_local_addr(local_addr), m_peer_addr(peer_addr), m_state(NotConnected), m_fd(fd), m_connection_type(type) {
     // 初始化输入和输出缓冲区，缓冲区大小由参数指定
     m_in_buffer = make_shared<TcpBuffer>(buffer_size);
     m_out_buffer = make_shared<TcpBuffer>(buffer_size);
@@ -103,12 +103,14 @@ void TcpConnection::excute() {
         vector<AbstractProtocol::s_ptr> replay_messages;
         m_coder->decode(result, m_in_buffer);  // 解码输入数据
         for(size_t i = 0; i < result.size(); ++i){
-            INFOLOG("success get request[%s] from client[%s]", result[i]->m_req_id.c_str(), m_peer_addr->toString().c_str());
+            INFOLOG("success get request[%s] from client[%s]", result[i]->m_msg_id.c_str(), m_peer_addr->toString().c_str());
 
             // 创建回应消息
             shared_ptr<TinyPBProtocol> message = make_shared<TinyPBProtocol>();
-            message->m_pb_data = "hello, this is rocket rpc test data";
-            message->m_req_id = result[i]->m_req_id;
+            // message->m_pb_data = "hello, this is rocket rpc test data";
+            // message->m_msg_id = result[i]->m_msg_id;
+
+            RpcDispatcher::GetRpcDispatcher()->dispatch(result[i], message, this);
             replay_messages.emplace_back(message);
         }
 
@@ -120,8 +122,8 @@ void TcpConnection::excute() {
         m_coder->decode(result, m_in_buffer);  // 解码输入数据
 
         for (size_t i = 0; i < result.size(); ++i) {
-            string req_id = result[i]->m_req_id;
-            auto it = m_read_dones.find(req_id);
+            string msg_id = result[i]->m_msg_id;
+            auto it = m_read_dones.find(msg_id);
             if (it != m_read_dones.end()) {
                 it->second(result[i]);  // 调用回调函数
             }
@@ -256,8 +258,16 @@ void TcpConnection::pushSendMessage(AbstractProtocol::s_ptr message, function<vo
 }
 
 // 将要读取的消息的请求 ID 和完成回调函数添加到读取队列
-void TcpConnection::pushReadMessage(const string& req_id, function<void(AbstractProtocol::s_ptr)> done) {
-    m_read_dones.insert(make_pair(req_id, done));
+void TcpConnection::pushReadMessage(const string& msg_id, function<void(AbstractProtocol::s_ptr)> done) {
+    m_read_dones.insert(make_pair(msg_id, done));
+}
+
+NetAddr::s_ptr TcpConnection::getLocalAddr(){
+    return m_local_addr;
+}
+
+NetAddr::s_ptr TcpConnection::getPeerAddr(){
+    return m_peer_addr;
 }
 
 }
