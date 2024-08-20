@@ -48,6 +48,7 @@ void RpcController::NotifyOnCancel(google::protobuf::Closure* callback) {
 void RpcController::SetError(int32_t error_code, const std::string& error_info) {
   m_error_code = error_code;        // 设置错误码
   m_error_info = error_info;        // 设置错误信息
+  m_is_failed = true;
 }
 
 // 获取错误码

@@ -45,7 +45,7 @@ class OrderImpl : public Order {
 // 测试TCP服务器的函数
 void test_tcp_server() {
   // 创建网络地址对象，IP地址为127.0.0.1，端口号为12345
-  rocket::IPNetAddr::s_ptr addr = std::make_shared<rocket::IPNetAddr>("127.0.0.1", 12345);
+  rocket::IPNetAddr::s_ptr addr = std::make_shared<rocket::IPNetAddr>("127.0.0.1", 12350);
 
   // 记录创建的地址信息
   DEBUGLOG("create addr %s", addr->toString().c_str());

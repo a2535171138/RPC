@@ -191,6 +191,7 @@ void EventLoop::wakeup(){
 // 停止事件循环
 void EventLoop::stop(){
   m_stop_flag = true;
+  wakeup();
 }
 
 // 添加 epoll 事件

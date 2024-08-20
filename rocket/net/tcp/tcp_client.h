@@ -1,6 +1,7 @@
 #ifndef ROCKET_NET_TCP_TCP_CLIENT_H
 #define ROCKET_NET_TCP_TCP_CLIENT_H
 
+#include <memory>
 #include "rocket/net/tcp/net_addr.h"         // 提供网络地址的定义
 #include "rocket/net/eventloop.h"            // 提供事件循环功能
 #include "rocket/net/tcp/tcp_connection.h"   // 提供 TCP 连接的定义
@@ -11,6 +12,8 @@ namespace rocket {
 // TcpClient 类定义
 class TcpClient {
 public:
+    typedef shared_ptr<TcpClient> s_ptr;
+
     // 构造函数，初始化 TcpClient 对象
     TcpClient(NetAddr::s_ptr peer_addr);
 
@@ -28,6 +31,8 @@ public:
     // 异步读取消息函数
     // 如果成功读取消息，将调用 done 函数，函数的参数为消息对象
     void readMessage(const std::string& msg_id, std::function<void(AbstractProtocol::s_ptr)> done);
+
+    void stop();
 
 private:
     NetAddr::s_ptr m_peer_addr;             // 存储对端地址

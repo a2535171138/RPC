@@ -19,6 +19,10 @@
 #include "rocket/net/coder/tinypb_protocol.h"  // 自定义TinyPB协议头文件
 #include "rocket/net/tcp/tcp_server.h"  // 自定义TCP服务器头文件
 #include "rocket/net/rpc/rpc_dispatcher.h"  // 自定义RPC分发器头文件
+#include "rocket/net/rpc/rpc_controller.h"  // 自定义RPC控制器头文件
+#include "rocket/net/rpc/rpc_channel.h"  // 自定义RPC通道头文件
+#include "rocket/net/rpc/rpc_closure.h"  // 自定义RPC闭包头文件
+
 #include "order.pb.h"  // 生成的Protocol Buffers消息头文件
 
 // 测试TCP客户端的函数
@@ -70,7 +74,7 @@ void test_tcp_client() {
 
       // 创建makeOrderResponse对象，并解析消息数据
       makeOrderResponse response;
-      if(!response.ParseFromString(message->m_pb_data)) {
+      if (!response.ParseFromString(message->m_pb_data)) {
         // 如果解析失败，记录错误日志并返回
         ERRORLOG("deserialize error");
         return;
@@ -81,9 +85,43 @@ void test_tcp_client() {
   });
 }
 
+// 测试RPC通道的函数
+void test_rpc_channel() {
+  // 创建网络地址对象，IP地址为127.0.0.1，端口号为12350
+  rocket::IPNetAddr::s_ptr addr = make_shared<rocket::IPNetAddr>("127.0.0.1", 12350);
+  // 创建RPC通道对象，并传入网络地址
+  shared_ptr<rocket::RpcChannel> channel = make_shared<rocket::RpcChannel>(addr);
+
+  // 创建请求和响应对象
+  shared_ptr<makeOrderRequest> request = make_shared<makeOrderRequest>();
+  request->set_price(100);
+  request->set_goods("apple");
+
+  shared_ptr<makeOrderResponse> response = make_shared<makeOrderResponse>();
+
+  // 创建RPC控制器对象，并设置消息ID
+  shared_ptr<rocket::RpcController> controller = make_shared<rocket::RpcController>();
+  controller->SetMsgId("99998888");
+
+  // 创建RPC闭包对象，并定义完成后要执行的操作
+  shared_ptr<rocket::RpcClosure> closure = make_shared<rocket::RpcClosure>([request, response, channel]() mutable {
+    INFOLOG("call rpc success, request[%s], response[%s]", request->ShortDebugString().c_str(), response->ShortDebugString().c_str());
+    INFOLOG("now exit eventloop");
+    channel->getTcpClient()->stop();  // 停止TCP客户端
+    channel.reset();  // 释放RPC通道对象
+  });
+
+  // 初始化RPC通道，传入控制器、请求、响应和闭包
+  channel->Init(controller, request, response, closure);
+
+  // 创建Order服务的Stub对象，并发起RPC调用
+  Order_Stub stub(channel.get());
+
+  stub.makeOrder(controller.get(), request.get(), response.get(), closure.get());  // 发起RPC调用
+}
+
 // 主函数
 int main() {
-
   // 设置全局配置，配置文件路径为../conf/rocket.xml
   rocket::Config::SetGlobalConfig("../conf/rocket.xml");
 
@@ -91,7 +129,10 @@ int main() {
   rocket::Logger::InitGlobalLogger();
 
   // 执行TCP客户端测试函数
-  test_tcp_client();
+  // test_tcp_client();
+  
+  // 执行RPC通道测试函数
+  test_rpc_channel();
 
   return 0;  // 正常结束程序
 }

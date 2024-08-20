@@ -9,6 +9,8 @@ namespace rocket {
 // RpcClosure 类继承自 google::protobuf::Closure，用于封装回调函数
 class RpcClosure : public google::protobuf::Closure {
  public:
+  RpcClosure(function<void()> cb) : m_cb(cb){}
+
   // 重写父类的 Run 方法，用于执行回调函数
   void Run() override {
     // 如果回调函数存在，则调用它
