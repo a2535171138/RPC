@@ -1,3 +1,6 @@
+rocket.xml存储服务端日志参数
+rocket_client.xml存储客户端日志参数  
+  
 创建一个log文件夹  
 运行test_rpc_server，会创建一个日志文件，循环往里写入日志内容  
 运行test_rpc_server，会创建2个日志文件，循环往client日志里写入日志内容  
