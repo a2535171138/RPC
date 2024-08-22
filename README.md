@@ -1,4 +1,4 @@
-rocket.xml存储服务端日志参数
+rocket.xml存储服务端日志参数  
 rocket_client.xml存储客户端日志参数  
   
 创建一个log文件夹  
