@@ -58,6 +58,10 @@ class Mutex{
     pthread_mutex_unlock(&m_mutex);  // 解锁
   }
 
+  pthread_mutex_t* getMutex(){
+    return &m_mutex;
+  }
+
  private:
   pthread_mutex_t m_mutex;  // POSIX线程互斥锁对象
 

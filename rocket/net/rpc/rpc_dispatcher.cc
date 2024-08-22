@@ -8,6 +8,7 @@
 #include "rocket/net/rpc/rpc_controller.h"
 #include "rocket/net/tcp/net_addr.h"
 #include "rocket/net/tcp/tcp_connection.h"
+#include "rocket/common/run_time.h"
 
 namespace rocket{
 
@@ -84,6 +85,9 @@ void RpcDispatcher::dispatch(AbstractProtocol::s_ptr request, AbstractProtocol::
   rpc_controller->SetLocalAddr(connection->getLocalAddr());
   rpc_controller->SetPeerAddr(connection->getPeerAddr());
   rpc_controller->SetMsgId(req_protocol->m_msg_id);
+
+  RunTime::GetRunTime()->m_msgid = req_protocol->m_msg_id;
+  RunTime::GetRunTime()->m_method_name = method_name;
 
   // 调用服务方法
   service->CallMethod(method, rpc_controller, req_msg, rsp_msg, nullptr);

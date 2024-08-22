@@ -88,7 +88,7 @@ void test_tcp_client() {
 // 测试RPC通道的函数
 void test_rpc_channel() {
   // 使用宏定义创建一个新的RPC通道对象，连接到指定的服务地址127.0.0.1:12355
-  NEWRPCCHANNEL("127.0.0.1:12355", channel);
+  NEWRPCCHANNEL("127.0.0.1:12345", channel);
 
   // 使用宏定义创建新的RPC请求对象和响应对象
   NEWMESSAGE(makeOrderRequest, request);
@@ -126,18 +126,18 @@ void test_rpc_channel() {
 
     // 记录退出事件循环的日志
     INFOLOG("now exit eventloop");
-    channel->getTcpClient()->stop();  // 停止TCP客户端
+    // channel->getTcpClient()->stop();  // 停止TCP客户端
     channel.reset();  // 释放RPC通道对象
   });
 
   // 发送RPC请求，并指定服务地址、方法、请求对象、响应对象和回调闭包
-  CALLRPC("127.0.0.1:12355", Order_Stub, makeOrder, controller, request, response, closure);
+  CALLRPC("127.0.0.1:12345", Order_Stub, makeOrder, controller, request, response, closure);
 }
 
 // 主函数，程序入口
 int main() {
   // 设置全局配置文件，指定配置文件路径为../conf/rocket.xml
-  rocket::Config::SetGlobalConfig("../conf/rocket.xml");
+  rocket::Config::SetGlobalConfig("../conf/rocket_client.xml");
 
   // 初始化全局日志记录器
   rocket::Logger::InitGlobalLogger();
