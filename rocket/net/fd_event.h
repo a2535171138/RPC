@@ -15,6 +15,7 @@ namespace rocket {
       enum TriggerEvent {
         IN_EVENT = EPOLLIN,   // 读事件
         OUT_EVENT = EPOLLOUT, // 写事件
+        ERROR_EVENT = EPOLLERR,
       };
 
       // 构造函数，接受一个文件描述符
@@ -33,7 +34,7 @@ namespace rocket {
       function<void()> handler(TriggerEvent event_type);
 
       // 为指定的触发事件类型设置回调函数
-      void listen(TriggerEvent event_type, function<void()> callback);
+      void listen(TriggerEvent event_type, function<void()> callback, function<void()> error_callback = nullptr);
 
       // 取消指定事件类型的监听
       void cancel(TriggerEvent event_type);
@@ -53,8 +54,9 @@ namespace rocket {
 
       epoll_event m_listen_events; // 用于epoll的事件结构
 
-      function<void()> m_read_callback;  // 读事件回调函数
-      function<void()> m_write_callback; // 写事件回调函数
+      function<void()> m_read_callback {nullptr};  // 读事件回调函数
+      function<void()> m_write_callback {nullptr}; // 写事件回调函数
+      function<void()> m_error_callback {nullptr}; 
   };
 
 }

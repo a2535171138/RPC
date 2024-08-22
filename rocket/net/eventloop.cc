@@ -167,6 +167,9 @@ void EventLoop::loop(){
           continue;
         }
 
+        int event = (int)(trigger_event.events);
+        DEBUGLOG("unknown event = %d", event);
+
         // 处理触发的读事件
         if(trigger_event.events & EPOLLIN){
           DEBUGLOG("fd %d trigger EPOLLIN event", fd_event->getFd());
@@ -176,6 +179,16 @@ void EventLoop::loop(){
         if(trigger_event.events & EPOLLOUT){
           DEBUGLOG("fd %d trigger EPOLLOUT event", fd_event->getFd());
           addTask(fd_event->handler(FdEvent::OUT_EVENT));
+        }
+  
+        if(trigger_event.events & EPOLLERR){
+          DEBUGLOG("fd %d trigger EPOLLERR event", fd_event->getFd());
+          // 刪除出错的套接字
+          deleteEpollEvent(fd_event);
+          if(fd_event->handler(FdEvent::ERROR_EVENT) != nullptr){
+            DEBUGLOG("fd %d add error callback", fd_event->getFd());
+            addTask(fd_event->handler(FdEvent::OUT_EVENT));
+          }
         }
       }
     }

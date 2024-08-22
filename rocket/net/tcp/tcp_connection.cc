@@ -64,18 +64,19 @@ void TcpConnection::onRead() {
                  m_peer_addr->toString().c_str(), m_fd);
 
         if (rt > 0) {
-            // 数据成功读取，更新缓冲区的写入索引
             m_in_buffer->moveWriteIndex(rt);
-            if (rt < read_count) {
-                // 如果读取的字节数少于请求的字节数，说明数据已读取完
+            if (rt == read_count) {
+                continue;
+            } else if (rt < read_count) {
                 is_read_all = true;
+                break;
             }
         } else if (rt == 0) {
-            // 对端关闭连接
             is_close = true;
+            break;
         } else if (rt == -1 && errno == EAGAIN) {
-            // 数据读取完毕，文件描述符暂时无数据
             is_read_all = true;
+            break;
         }
     }
 

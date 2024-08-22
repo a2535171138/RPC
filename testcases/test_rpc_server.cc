@@ -29,6 +29,9 @@ class OrderImpl : public Order {
                       const ::makeOrderRequest* request,
                       ::makeOrderResponse* response,
                       ::google::protobuf::Closure* done) {
+    DEBUGLOG("start sleep 5s");
+    sleep(5);
+    DEBUGLOG("end sleep 5s");
 
     // 检查订单价格，如果价格小于10，则返回错误信息
     if (request->price() < 10) {
@@ -45,7 +48,7 @@ class OrderImpl : public Order {
 // 测试TCP服务器的函数
 void test_tcp_server() {
   // 创建网络地址对象，IP地址为127.0.0.1，端口号为12345
-  rocket::IPNetAddr::s_ptr addr = std::make_shared<rocket::IPNetAddr>("127.0.0.1", 12350);
+  rocket::IPNetAddr::s_ptr addr = std::make_shared<rocket::IPNetAddr>("127.0.0.1", 12355);
 
   // 记录创建的地址信息
   DEBUGLOG("create addr %s", addr->toString().c_str());

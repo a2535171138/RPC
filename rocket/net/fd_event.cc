@@ -27,14 +27,17 @@ namespace rocket {
     if (event == TriggerEvent::IN_EVENT) {
       // 如果是读事件，返回读回调函数
       return m_read_callback;
-    } else {
+    } else if(event == TriggerEvent::OUT_EVENT){
       // 如果是写事件，返回写回调函数
       return m_write_callback;
+    } else if(event == TriggerEvent::ERROR_EVENT){
+      return m_error_callback;
     }
+    return nullptr;
   }
 
   // 设置指定事件类型的回调函数，并配置epoll监听的事件类型
-  void FdEvent::listen(TriggerEvent event_type, function<void()> callback) {
+  void FdEvent::listen(TriggerEvent event_type, function<void()> callback, function<void()> error_callback) {
     if (event_type == TriggerEvent::IN_EVENT) {
       // 如果是读事件，设置读回调函数，并将事件类型设置为EPOLLIN
       m_listen_events.events |= EPOLLIN;
@@ -43,6 +46,13 @@ namespace rocket {
       // 如果是写事件，设置写回调函数，并将事件类型设置为EPOLLOUT
       m_listen_events.events |= EPOLLOUT;
       m_write_callback = callback;
+    }
+
+    if(m_error_callback == nullptr){
+      m_error_callback = error_callback;
+    }
+    else {
+      m_error_callback = nullptr;
     }
 
     // 将当前对象的指针存储到监听事件的数据中
